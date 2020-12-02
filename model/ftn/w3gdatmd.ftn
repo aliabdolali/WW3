@@ -648,7 +648,7 @@
         REAL   , POINTER :: TRNX(:,:), TRNY(:,:) ! TRANSPARENCY INFORMATION ON IX,IY
 !/SMC        REAL, POINTER         :: CTRNX(:), CTRNY(:), CLATF(:)
         REAL, POINTER         :: SPCBAC(:,:), ANGARC(:)
-        REAL   , POINTER :: XGRD(:,:), YGRD(:,:) ! X AND Y DEFINED ON IX,IY
+        REAL*8   , POINTER :: XGRD(:,:), YGRD(:,:) ! X AND Y DEFINED ON IX,IY
         REAL   , POINTER :: DXDP(:,:), DXDQ(:,:) ! DX/DP & DX/DQ DEFINED ON IX,IY
         REAL   , POINTER :: DYDP(:,:), DYDQ(:,:) ! DY/DP & DY/DQ DEFINED ON IX,IY
         REAL   , POINTER :: DPDX(:,:), DPDY(:,:) ! DP/DX & DP/DY DEFINED ON IX,IY
@@ -687,22 +687,27 @@
 !
 ! unstructured data
 !
-        INTEGER               :: NTRI
-        DOUBLE PRECISION, POINTER         :: XYB(:,:)
-        INTEGER, POINTER      :: TRIGP(:,:)
-!/PDLIB        INTEGER               :: NBND_MAP
-!/PDLIB        INTEGER, POINTER      :: INDEX_MAP(:)
-!/PDLIB        INTEGER, POINTER      :: MAPSTA_LOC(:)
+        INTEGER              :: NTRI
+        INTEGER, POINTER     :: TRIGP(:,:)
+!/PDLIB        INTEGER :: NBND_MAP
+!/PDLIB        INTEGER, POINTER     :: INDEX_MAP(:)
+!/PDLIB        INTEGER, POINTER     :: MAPSTA_LOC(:)
+!/PDLIB        INTEGER*1, POINTER   :: IOBPD_LOC(:,:)
+!/PDLIB        INTEGER*2, POINTER   :: IOBP_LOC(:)
+!/PDLIB        INTEGER*1, POINTER   :: IOBDP_LOC(:)
+!/PDLIB        INTEGER*1, POINTER   :: IOBPA_LOC(:)
+
         REAL(8), POINTER      :: LEN(:,:),SI(:), IEN(:,:)
 
         REAL                  :: MAXX, MAXY, DXYMAX
         REAL, POINTER         :: ANGLE(:,:),ANGLE0(:,:)
         INTEGER               :: COUNTRI,COUNTOT,NNZ, NBEDGE
         INTEGER, POINTER      :: CCON(:), COUNTCON(:), IE_CELL(:), &
-                                 POS_CELL(:), IOBP(:), IOBPD(:,:), IOBDP(:), IOBPA(:),   &
-!/PDLIB                          IOBPD_loc(:,:), IOBP_loc(:),                    &
+                                 POS_CELL(:),   &
                                  IAA(:), JAA(:), POSI(:,:), INDEX_CELL(:),       &
                                  I_DIAG(:), JA_IE(:,:,:)
+        INTEGER*2, POINTER    :: IOBP(:)
+        INTEGER*1, POINTER    :: IOBPD(:,:), IOBDP(:), IOBPA(:)
         INTEGER, POINTER      :: EDGES(:,:), NEIGH(:,:)
         REAL(8), POINTER      :: TRIA(:)
         REAL, POINTER         :: CROSSDIFF(:,:)
@@ -849,6 +854,8 @@
 !/DB0        REAL                  :: DUMMY
 !/DB1        REAL                  :: SDBC1, SDBC2
 !/DB1        LOGICAL               :: FDONLY
+!/DB1        REAL                  :: SDBSC
+!/DB2        REAL                  :: SDBC1, SDBC2
 !/DBX        REAL                  :: DUMMY
       END TYPE SDBP
 
@@ -953,21 +960,24 @@
 !
       INTEGER, POINTER        :: NTRI,COUNTRI,COUNTOT,NNZ
       INTEGER                 :: optionCall = 3 ! take care all other options are basically wrong
-!  XYB may not be necessary now that we have XGRD and YGRD
-!  but these XGRD and YGRD should probably be double precision
-      DOUBLE PRECISION, POINTER  ::     XYB(:,:)   
       INTEGER, POINTER        :: TRIGP(:,:)
-!/PDLIB      INTEGER, POINTER        :: NBND_MAP
+!/PDLIB      INTEGER, POINTER     :: NBND_MAP
 !/PDLIB      INTEGER, POINTER        :: INDEX_MAP(:)
 !/PDLIB      INTEGER, POINTER        :: MAPSTA_LOC(:)
+!/PDLIB        INTEGER*1, POINTER   :: IOBPD_LOC(:,:)
+!/PDLIB        INTEGER*2, POINTER   :: IOBP_LOC(:)
+!/PDLIB        INTEGER*1, POINTER   :: IOBDP_LOC(:)
+!/PDLIB        INTEGER*1, POINTER   :: IOBPA_LOC(:)
+
       REAL(8), POINTER        :: IEN(:,:), LEN(:,:), SI(:)
       REAL, POINTER           :: ANGLE(:,:),ANGLE0(:,:)
       INTEGER,  POINTER       :: CCON(:),  COUNTCON(:), IE_CELL(:),           &
-                                 POS_CELL(:), IOBP(:), IOBPD(:,:), IOBDP(:), IOBPA(:),  &
-!/PDLIB                                 IOBPD_loc(:,:), IOBP_loc(:),          &
+                                 POS_CELL(:),  &
                                  IAA(:), JAA(:), POSI(:,:),                   &
                                  I_DIAG(:), JA_IE(:,:,:),                     &
                                  INDEX_CELL(:)
+      INTEGER*2, POINTER      :: IOBP(:)
+      INTEGER*1, POINTER      :: IOBPD(:,:), IOBDP(:), IOBPA(:)
       REAL(8), POINTER        :: TRIA(:)
       REAL, POINTER           :: CROSSDIFF(:,:)
       REAL,POINTER            :: MAXX, MAXY, DXYMAX 
@@ -1012,7 +1022,7 @@
       REAL   , POINTER :: TRNX(:,:), TRNY(:,:) ! TRANSPARENCY INFORMATION ON IX,IY
 !/SMC        REAL, POINTER         :: CTRNX(:), CTRNY(:), CLATF(:)
       REAL, POINTER         :: SPCBAC(:,:), ANGARC(:)
-      REAL   , POINTER :: XGRD(:,:), YGRD(:,:) ! X AND Y DEFINED ON IX,IY
+      REAL*8   , POINTER :: XGRD(:,:), YGRD(:,:) ! X AND Y DEFINED ON IX,IY
       REAL   , POINTER :: DXDP(:,:), DXDQ(:,:) ! DX/DP & DX/DQ DEFINED ON IX,IY
       REAL   , POINTER :: DYDP(:,:), DYDQ(:,:) ! DY/DP & DY/DQ DEFINED ON IX,IY
       REAL   , POINTER :: DPDX(:,:), DPDY(:,:) ! DP/DX & DP/DY DEFINED ON IX,IY
@@ -1145,6 +1155,8 @@
 !/
 !/DB1      REAL, POINTER           :: SDBC1, SDBC2
 !/DB1      LOGICAL, POINTER        :: FDONLY
+!/DB1      REAL, POINTER           :: SDBSC
+!/DB2      REAL, POINTER           :: SDBC1, SDBC2
 !/
 !/UOST!/ Data aliases for structure UOSTP(S)
 !/UOST      CHARACTER(LEN=:), POINTER   :: UOSTFILELOCAL, UOSTFILESHADOW
@@ -1448,20 +1460,24 @@
 !
 ! NB: Some array start at 0 because MAPFS(IY,IX)=0 for missing points 
 !
+      IF (GTYPE .NE. UNGTYPE) THEN
+        ALLOCATE ( GRIDS(IMOD)%ZB(MSEA),  &
+                 GRIDS(IMOD)%XGRD(MY,MX),    &
+                 GRIDS(IMOD)%YGRD(MY,MX),    &
+                 STAT=ISTAT                  )
+        CHECK_ALLOC_STATUS ( ISTAT )
+      ENDIF
       ALLOCATE ( GRIDS(IMOD)%MAPSTA(MY,MX),  &
                  GRIDS(IMOD)%MAPST2(MY,MX),  &
                  GRIDS(IMOD)%MAPFS(MY,MX),   &
                  GRIDS(IMOD)%MAPSF(MSEA,3),  &
                  GRIDS(IMOD)%FLAGST(MSEA),   &
 !/RTD                 GRIDS(IMOD)%AnglD(MSEA),    &
-                 GRIDS(IMOD)%ZB(MSEA),       &
                  GRIDS(IMOD)%CLATS(0:MSEA),  &
                  GRIDS(IMOD)%CLATIS(0:MSEA), &
                  GRIDS(IMOD)%CTHG0S(0:MSEA), &
                  GRIDS(IMOD)%TRNX(MY,MX),    &
                  GRIDS(IMOD)%TRNY(MY,MX),    &
-                 GRIDS(IMOD)%XGRD(MY,MX),    &
-                 GRIDS(IMOD)%YGRD(MY,MX),    &
                  GRIDS(IMOD)%DXDP(MY,MX),    &
                  GRIDS(IMOD)%DXDQ(MY,MX),    &
                  GRIDS(IMOD)%DYDP(MY,MX),    &
@@ -2016,11 +2032,7 @@
 !
       GNAME  => GRIDS(IMOD)%GNAME
       FILEXT => GRIDS(IMOD)%FILEXT
-      XYB    => GRIDS(IMOD)%XYB
       TRIGP  => GRIDS(IMOD)%TRIGP
-!/PDLIB      NBND_MAP => GRIDS(IMOD)%NBND_MAP
-!/PDLIB      INDEX_MAP => GRIDS(IMOD)%INDEX_MAP
-!/PDLIB      MAPSTA_LOC => GRIDS(IMOD)%MAPSTA_LOC
       NTRI     => GRIDS(IMOD)%NTRI
       COUNTRI     => GRIDS(IMOD)%COUNTRI
       SI     => GRIDS(IMOD)%SI
@@ -2047,14 +2059,15 @@
       IOBPD     => GRIDS(IMOD)%IOBPD
       IOBDP     => GRIDS(IMOD)%IOBDP
       IOBPA     => GRIDS(IMOD)%IOBPA
-!/PDLIB      IOBP_loc     => GRIDS(IMOD)%IOBP_loc
-!/PDLIB      IOBPD_loc     => GRIDS(IMOD)%IOBPD_loc
       TRIA     => GRIDS(IMOD)%TRIA
       CROSSDIFF => GRIDS(IMOD)%CROSSDIFF
       MAXX     => GRIDS(IMOD)%MAXX
       MAXY     => GRIDS(IMOD)%MAXY
       DXYMAX   => GRIDS(IMOD)%DXYMAX      
-
+      XGRD   => GRIDS(IMOD)%XGRD
+      YGRD   => GRIDS(IMOD)%YGRD
+      ZB     => GRIDS(IMOD)%ZB
+!AR: Todo: What ist he purpose of GINIT???
 !
       IF ( GINIT ) THEN
 !
@@ -2065,15 +2078,12 @@
           FLAGST => GRIDS(IMOD)%FLAGST
 !
 !/RTD          AnglD  => GRIDS(IMOD)%AnglD
-          ZB     => GRIDS(IMOD)%ZB
           CLATS  => GRIDS(IMOD)%CLATS
           CLATIS => GRIDS(IMOD)%CLATIS
           CTHG0S => GRIDS(IMOD)%CTHG0S
           TRNX   => GRIDS(IMOD)%TRNX
           TRNY   => GRIDS(IMOD)%TRNY
 !
-          XGRD   => GRIDS(IMOD)%XGRD
-          YGRD   => GRIDS(IMOD)%YGRD
           DXDP   => GRIDS(IMOD)%DXDP
           DXDQ   => GRIDS(IMOD)%DXDQ
           DYDP   => GRIDS(IMOD)%DYDP
@@ -2370,6 +2380,9 @@
 !/DB1      SDBC1  => MPARS(IMOD)%SDBPS%SDBC1
 !/DB1      SDBC2  => MPARS(IMOD)%SDBPS%SDBC2
 !/DB1      FDONLY => MPARS(IMOD)%SDBPS%FDONLY
+!/DB1      SDBSC  => MPARS(IMOD)%SDBPS%SDBSC
+!/DB2      SDBC1  => MPARS(IMOD)%SDBPS%SDBC1
+!/DB2      SDBC2  => MPARS(IMOD)%SDBPS%SDBC2
 !
 !
 !/UOST      UOSTFILELOCAL => MPARS(IMOD)%UOSTPS%UOSTFILELOCAL
@@ -2574,7 +2587,7 @@
       SELECT CASE ( GTYPE )
         CASE ( RLGTYPE )
           CALL W3CGDM( IJG, FLAGLL, ICLOSE, PTILED, QTILED,            &
-                       PRANGE, QRANGE, LBI, UBI, LBO, UBO, XGRD, YGRD, &
+                       PRANGE, QRANGE, LBI, UBI, LBO, UBO, REAL(XGRD), REAL(YGRD), &
                        NFD=NFD, SPHERE=SPHERE, DX=SX, DY=SY,           &
                        DXDP=DXDP, DYDP=DYDP, DXDQ=DXDQ, DYDQ=DYDQ,     &
                        DPDX=DPDX, DPDY=DPDY, DQDX=DQDX, DQDY=DQDY,     &
@@ -2589,7 +2602,7 @@
             END IF
         CASE ( CLGTYPE )
           CALL W3CGDM( IJG, FLAGLL, ICLOSE, PTILED, QTILED,            &
-                       PRANGE, QRANGE, LBI, UBI, LBO, UBO, XGRD, YGRD, &
+                       PRANGE, QRANGE, LBI, UBI, LBO, UBO, REAL(XGRD), REAL(YGRD), &
                        NFD=NFD, SPHERE=SPHERE,                         &
                        DXDP=DXDP, DYDP=DYDP, DXDQ=DXDQ, DYDQ=DYDQ,     &
                        DPDX=DPDX, DPDY=DPDY, DQDX=DQDX, DQDY=DQDY,     &
@@ -2754,17 +2767,15 @@
 #if defined(TEST_W3GDATMD) || defined(TEST_W3GDATMD_W3DIMUG)
       WRITE (NDST,9000) IMOD, MX, MTRI
 #endif
-
-!/MEMCHECK      WRITE(740+IAPROC,*) 'memcheck_____:', 'WW3_UG_ALLOCATE SECTION 1'
-!/MEMCHECK      call getMallocInfo(mallinfos)
-!/MEMCHECK      call printMallInfo(IAPROC,mallInfos)
 !
 ! -------------------------------------------------------------------- /
 ! 2.  Allocate arrays
 !
-      ALLOCATE ( GRIDS(IMOD)%TRIGP(MTRI,3),                         &
-                 GRIDS(IMOD)%XYB(MX,3),                             &
+      ALLOCATE ( GRIDS(IMOD)%TRIGP(3,MTRI),                         &
                  GRIDS(IMOD)%SI(MX),                                &
+                 GRIDS(IMOD)%XGRD(1,MX),                            &
+                 GRIDS(IMOD)%YGRD(1,MX),                            &
+                 GRIDS(IMOD)%ZB(MX),                                &
                  GRIDS(IMOD)%TRIA(MTRI),                            & 
                  GRIDS(IMOD)%CROSSDIFF(6,MTRI),                     &
                  GRIDS(IMOD)%IEN(MTRI,6),                           &
@@ -2814,10 +2825,6 @@
 #if defined(TEST_W3GDATMD) || defined(TEST_W3GDATMD_W3DIMUG)
       WRITE (NDST,9003)
 #endif
-!/MEMCHECK      WRITE(740+IAPROC,*) 'memcheck_____:', 'WW3_UG_ALLOCATE SECTION 2'
-!/MEMCHECK      call getMallocInfo(mallinfos)
-!/MEMCHECK      call printMallInfo(IAPROC,mallInfos)
-
       RETURN
 !
 ! Formats

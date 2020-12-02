@@ -214,7 +214,7 @@
                           RLGTYPE, CLGTYPE, UNGTYPE, GTYPE, FLAGLL,   &
                           ICLOSE,ICLOSE_NONE,ICLOSE_SMPL,ICLOSE_TRPL, &
                           MAPSTA, MAPFS, FILEXT, ZB, TRNX, TRNY
-      USE W3GDATMD, ONLY: XYB, TRIGP,MAXX, MAXY, DXYMAX  
+      USE W3GDATMD, ONLY: MAXX, MAXY, DXYMAX  
 !/RTD  !!  Use rotated N-Pole lat/lon and conversion sub.  JGLi12Jun2012
 !/RTD      USE W3GDATMD, ONLY: PoLat, PoLon, FLAGUNR    
 !/RTD      USE W3SERVMD, ONLY: W3LLTOEQ 
@@ -308,7 +308,7 @@
         ELSE 
           CALL IS_IN_UNGRID(IMOD, XPT(IPT), YPT(IPT), itout, IX, IY, RD)
           INGRID = (ITOUT.GT.0) 
-          END IF
+        END IF
 !
         IF ( .NOT.INGRID ) THEN
           IF ( IAPROC .EQ. NAPERR ) THEN
@@ -316,10 +316,10 @@
               WRITE (NDSE,1000) XPT(IPT), YPT(IPT), PNAMES(IPT)
             ELSE
               WRITE (NDSE,1001) XPT(IPT), YPT(IPT), PNAMES(IPT)
-              END IF
             END IF
-          CYCLE
           END IF
+          CYCLE
+        END IF
 !
 !/T     DO K = 1,4
 !/T       WRITE (NDST,9012) IX(K), IY(K), RD(K)
@@ -628,6 +628,7 @@
 !/SETUP      USE W3WDATMD, ONLY: ZETA_SETUP
 !/SETUP      USE W3ODATMD, ONLY: ZET_SETO
 !/MPI      USE W3ODATMD, ONLY: IRQPO2
+      USE W3DISPMD, ONLY: WAVNU_LOCAL
       USE W3SERVMD, ONLY: EXTCDE
 !/S      USE W3SERVMD, ONLY: STRACE
 !/T      USE W3ARRYMD, ONLY: PRT2DS
@@ -651,7 +652,7 @@
 !/S      INTEGER, SAVE           :: IENT = 0
       REAL                    :: RD(4), RDS, RDI, FACRD,              &
                                  WNDX, WNDY, CURX, CURY, FAC1(NK),    &
-                                 FAC2(NK), FAC3(NK), FAC4(NK)
+                                 FAC2(NK), FAC3(NK), FAC4(NK), CG1, WN1
       INTEGER                 :: JSEA, ISEA
 !/T      REAL                    :: SPTEST(NK,NTH)
 !/RTD      REAL :: Spectr(NSPEC), AnglDIS
@@ -804,10 +805,30 @@
 ! Interpolate spectrum
 !
         DO IK=1, NK
-          FAC1(IK) = TPI * SIG(IK) / CG(IK,IS(1))
-          FAC2(IK) = TPI * SIG(IK) / CG(IK,IS(2))
-          FAC3(IK) = TPI * SIG(IK) / CG(IK,IS(3))
-          FAC4(IK) = TPI * SIG(IK) / CG(IK,IS(4))
+#ifndef NOCGTABLE
+          CG1    = CG(IK,IS(1))
+#else
+          CALL WAVNU_LOCAL(SIG(IK),DW(IS(1)),WN1,CG1)
+#endif
+          FAC1(IK) = TPI * SIG(IK) / CG1
+#ifndef NOCGTABLE
+          CG1    = CG(IK,IS(2))
+#else
+          CALL WAVNU_LOCAL(SIG(IK),DW(IS(2)),WN1,CG1)
+#endif
+          FAC2(IK) = TPI * SIG(IK) / CG1
+#ifndef NOCGTABLE
+          CG1    = CG(IK,IS(3))
+#else
+          CALL WAVNU_LOCAL(SIG(IK),DW(IS(3)),WN1,CG1)
+#endif
+          FAC3(IK) = TPI * SIG(IK) / CG1
+#ifndef NOCGTABLE
+          CG1    = CG(IK,IS(4))
+#else
+          CALL WAVNU_LOCAL(SIG(IK),DW(IS(4)),WN1,CG1)
+#endif
+          FAC4(IK) = TPI * SIG(IK) / CG1
           END DO
 !
         DO IK=1,NK

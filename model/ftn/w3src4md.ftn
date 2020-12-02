@@ -277,7 +277,7 @@
       CALL CALC_USTAR(U,TAUW,USTAR,Z0,CHARN) 
       UNZ    = MAX ( 0.01 , U )
       CD     = (USTAR/UNZ)**2 
-      USDIR = UDIR
+      USDIR  = UDIR
 !
 ! 6.  Final test output ---------------------------------------------- *
 !
@@ -404,7 +404,7 @@
 !/ ------------------------------------------------------------------- /
 !/ Local parameters
 !/
-      INTEGER                 :: IS,IK,ITH
+      INTEGER                 :: IS,IK,ITH,II
 !/S      INTEGER, SAVE           :: IENT = 0
       REAL                    :: FACLN1, FACLN2, LAMBDA
       REAL                    :: COSU, SINU, TAUX, TAUY, USDIRP, USTP
@@ -507,6 +507,7 @@
         AORB=2*SQRT(AORB)
         XI=(ALOG10(MAX(AORB/Z0NOZ,3.))-ABMIN)/DELAB
         IND  = MIN (SIZEFWTABLE-1, INT(XI))
+        !WRITE(66666,*) IND, XI, AORB, Z0NOZ, ABMIN, DELAB, MAX(AORB/Z0NOZ,3.), ALOG10(MAX(AORB/Z0NOZ,3.))-ABMIN
         DELI1= MIN (1. ,XI-FLOAT(IND))
         DELI2= 1. - DELI1
         FW =FWTABLE(IND)*DELI2+FWTABLE(IND+1)*DELI1
@@ -680,7 +681,9 @@
       DELJ2=1. - DELJ1
       IF (TTAUWSHELTER.GT.0) THEN 
         XK = CONST0*TEMP / DELTAIL
-         I = MIN (ILEVTAIL-1, INT(XK))
+         II = MAX(0,INT(MIN(REAL(HUGE(I)),XK)) - 1)
+         I  = MIN(ILEVTAIL-1, II)
+         !WRITE(*,'(3I20,5F30.10)') I, II, HUGE(I), CONST0, TEMP, XK, DELTAIL, SUM(A)
          DELK1= MIN (1. ,XK-FLOAT(I))
          DELK2=1. - DELK1
          TAU1 =((TAUHFT2(IND,J,I)*DELI2+TAUHFT2(IND+1,J,I)*DELI1 )*DELJ2 &
@@ -705,6 +708,8 @@
         TAUWX=TAUWX*TAUWB/TAUW
         TAUWY=TAUWY*TAUWB/TAUW
         END IF
+
+      !IF(IX == 1232) WRITE(*,'(A10,4F20.10)') 'ST4 WIND INPUT END', SUM(S), SUM(D)
 ! 
       RETURN
 !

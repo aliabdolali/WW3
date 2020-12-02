@@ -767,7 +767,7 @@
 !/NL3      INTEGER                 :: NQDEF
 !/NL3      REAL                    :: MSC, NSC, KDFD, KDFS
 !/NL4      INTEGER                 :: INDTSA, ALTLP
-!/DB1      REAL                    :: BJALFA, BJGAM
+!/DB1      REAL                    :: BJALFA, BJGAM, DBFLAG
 !/DB1      LOGICAL                 :: BJFLAG
 !/PR2      REAL                    :: DTIME
 !
@@ -775,13 +775,13 @@
 !/SMC      LOGICAL                 :: UNO3, AVERG, SEAWND 
 !
 !/PR3      REAL                    :: WDTHCG, WDTHTH
-           LOGICAL :: JGS_TERMINATE_MAXITER = .TRUE.
-           LOGICAL :: JGS_TERMINATE_DIFFERENCE = .TRUE.
-           LOGICAL :: JGS_TERMINATE_NORM = .TRUE.
-           LOGICAL :: JGS_LIMITER = .FALSE.
-           LOGICAL :: JGS_BLOCK_GAUSS_SEIDEL = .TRUE.
-           LOGICAL :: JGS_USE_JACOBI = .TRUE.
-           LOGICAL :: JGS_SOURCE_NONLINEAR = .FALSE.
+           LOGICAL :: JGS_TERMINATE_MAXITER    =  .TRUE.
+           LOGICAL :: JGS_TERMINATE_DIFFERENCE =  .TRUE.
+           LOGICAL :: JGS_TERMINATE_NORM       = .FALSE.
+           LOGICAL :: JGS_LIMITER              = .FALSE.
+           LOGICAL :: JGS_BLOCK_GAUSS_SEIDEL   = .TRUE.
+           LOGICAL :: JGS_USE_JACOBI           = .TRUE.
+           LOGICAL :: JGS_SOURCE_NONLINEAR     = .FALSE.
            LOGICAL :: UGOBCAUTO = .FALSE.
            LOGICAL :: UGBCCFL   = .FALSE.
            LOGICAL :: EXPFSN    = .TRUE.
@@ -796,13 +796,13 @@
            LOGICAL :: SETUP_APPLY_WLV = .FALSE.
            INTEGER :: JGS_MAXITER=100
            INTEGER :: nbSel
-           INTEGER :: UNSTSCHEMES(4)
+           INTEGER :: UNSTSCHEMES(6)
            INTEGER :: UNSTSCHEME
            INTEGER :: JGS_NLEVEL = 0
            REAL*8  :: JGS_PMIN = 0.
            REAL*8  :: JGS_DIFF_THR = 1.E-10
-           REAL*8  :: JGS_NORM_THR = 1.E-20
-           REAL*8  :: SOLVERTHR_SETUP = 1.E-20
+           REAL*8  :: JGS_NORM_THR = 1.E-12
+           REAL*8  :: SOLVERTHR_SETUP = 1.E-12
            REAL*8  :: CRIT_DEP_SETUP = 0.
 !
            CHARACTER               :: UGOBCFILE*60
@@ -868,7 +868,7 @@
 !/BT4      NAMELIST /SBT4/ SEDMAPD50, SED_D50_UNIFORM, RIPFAC1,            &
 !/BT4                      RIPFAC2, RIPFAC3, RIPFAC4, SIGDEPTH,            &
 !/BT4                      BOTROUGHMIN, BOTROUGHFAC
-!/DB1      NAMELIST /SDB1/ BJALFA, BJGAM, BJFLAG
+!/DB1      NAMELIST /SDB1/ BJALFA, BJGAM, BJFLAG, DBFLAG
 !/UOST     NAMELIST /UOST/ UOSTFILELOCAL, UOSTFILESHADOW,             &
 !/UOST                     UOSTFACTORLOCAL, UOSTFACTORSHADOW
 !
@@ -1913,6 +1913,7 @@
 !/DB1      BJALFA = 1.
 !/DB1      BJGAM  = 0.73
 !/DB1      BJFLAG = .TRUE.
+!/DB1      DBFLAG = 1.
 !
 !/DB1      CALL READNL ( NDSS, 'SDB1', STATUS )
 !/DB1      WRITE (NDSO,928) STATUS
@@ -1929,6 +1930,7 @@
 !/DB1      SDBC1  = BJALFA
 !/DB1      SDBC2  = BJGAM
 !/DB1      FDONLY = BJFLAG
+!/DB1      SDBSC  = DBFLAG
 !
 !
 !/UOST      UOSTFILELOCAL = 'obstructions_local.'//ADJUSTL(TRIM(GNAME))//'.in'
@@ -1983,17 +1985,17 @@
 !
 ! 6.l Read unstructured data 
 ! initialisation of logical related to unstructured grid
-       UGOBCAUTO = .TRUE.
-       UGBCCFL = .TRUE.
-       UGOBCDEPTH= -10.
-       UGOBCOK = .FALSE.
-       UGOBCFILE = 'unset'
-       EXPFSN    = .TRUE.
-       EXPFSPSI  = .FALSE.
-       EXPFSFCT  = .FALSE.
-       IMPFSN    = .FALSE.
-       IMPTOTAL  = .FALSE.
-       EXPTOTAL  = .FALSE. 
+       UGOBCAUTO  = .TRUE.
+       UGBCCFL    = .FALSE.
+       UGOBCDEPTH = -10.
+       UGOBCOK    = .FALSE.
+       UGOBCFILE  = 'unset'
+       EXPFSN     = .FALSE.
+       EXPFSPSI   = .FALSE.
+       EXPFSFCT   = .FALSE.
+       IMPFSN     = .FALSE.
+       IMPTOTAL   = .FALSE.
+       EXPTOTAL   = .FALSE. 
        IMPREFRACTION = .FALSE.
        IMPFREQSHIFT = .FALSE.
        IMPSOURCE = .FALSE.
@@ -2028,33 +2030,23 @@
        B_JGS_NLEVEL = JGS_NLEVEL
        B_JGS_SOURCE_NONLINEAR = JGS_SOURCE_NONLINEAR
 
-       IF ((EXPFSN .eqv. .FALSE.).and.(EXPFSPSI .eqv. .FALSE.)     &
-           .and.(EXPFSFCT .eqv. .FALSE.)                           &
-           .and.(IMPFSN .eqv. .FALSE.)                             &
-           .and.(EXPTOTAL .eqv. .FALSE.)                           &
-           .and.(IMPTOTAL .eqv. .FALSE.)) THEN
-         EXPFSN=.TRUE. ! This is the default scheme ...
-       END IF
        nbSel=0
-
-       IF (EXPFSN) nbSel=nbSel+1
-       IF (EXPFSPSI) nbSel=nbSel+1
-       IF (EXPFSFCT) nbSel=nbSel+1
-       IF (IMPFSN) nbSel=nbSel+1
-       IF (IMPTOTAL) nbSel=nbSel+1
-       IF (EXPTOTAL) nbSel=nbSel+1
+       IF (EXPFSN)   nbSel = nbSel+1
+       IF (EXPFSPSI) nbSel = nbSel+1
+       IF (EXPFSFCT) nbSel = nbSel+1
+       IF (IMPFSN)   nbSel = nbSel+1
+       IF (IMPTOTAL) nbSel = nbSel+1
+       IF (EXPTOTAL) nbSel = nbSel+1
 
        IF (GTYPE .EQ. UNGTYPE) THEN
          IF (nbSel .ne. 1) THEN
-           WRITE(NDSE,*) ' *** WAVEWATCH III ERROR IN WW3_GRID:'
            IF (nbSel .gt. 1) THEN
-             WRITE (NDSE,*) 'More than one scheme selected'
+             WRITE (*,*) 'MORE THAN ONE UNSTRUCTURED SCHEME SELECTED'
+             CALL EXTCDE ( 19 )
            ELSE IF (nbSel .eq. 0) THEN
-             WRITE (NDSE,*) 'no scheme selected'
+             WRITE (*,*) 'NOTHIN SELECTED FROM THE UNSTRUCTURED PART'
+             CALL EXTCDE ( 19 )
            END IF
-           WRITE (NDSE,*)'Select only one of EXPFSN, EXPFSFCT, EXPFSPSI'
-           WRITE (NDSE,*)'IMPFSN, IMPTOTAL'
-           CALL EXTCDE ( 30 )
          END IF
        END IF
 !
@@ -2729,7 +2721,7 @@
 !/SMC                      AVERG, LvSMC, NBISMC, ISHFT, JEQT, SEAWND 
 !/PR3          WRITE (NDSO,2953) CFLTM, WDTHCG, WDTHTH
 !
-        WRITE (NDSO,2956) UGBCCFL, UGOBCAUTO, UGOBCDEPTH,TRIM(UGOBCFILE), &
+        WRITE (NDSO,*) UGBCCFL, UGOBCAUTO, UGOBCDEPTH,UGOBCFILE, &
                           EXPFSN, EXPFSPSI, EXPFSFCT, IMPFSN, EXPTOTAL,&
                           IMPTOTAL, IMPREFRACTION, IMPFREQSHIFT,      &
                           IMPSOURCE, SETUP_APPLY_WLV,                 &
@@ -2987,13 +2979,24 @@
 !
       DO_CHANGE_WLV=.FALSE.
       IF ( GTYPE.EQ.UNGTYPE) THEN 
-        UNSTSCHEMES(:)=0
-        IF (EXPFSN)   UNSTSCHEMES(1)=1
-        IF (EXPFSPSI) UNSTSCHEMES(2)=1
-        IF (EXPFSFCT) UNSTSCHEMES(3)=1
-        IF (IMPFSN)   UNSTSCHEMES(4)=1
+        UNSTSCHEMES = 0
+        IF (EXPFSN)   UNSTSCHEMES(1) = 1
+        IF (EXPFSPSI) UNSTSCHEMES(2) = 1
+        IF (EXPFSFCT) UNSTSCHEMES(3) = 1
+        IF (IMPFSN)   UNSTSCHEMES(4) = 1
+        IF (IMPTOTAL) UNSTSCHEMES(5) = 1
+        IF (EXPTOTAL) UNSTSCHEMES(6) = 1
+
+        IF (SUM(UNSTSCHEMES) .eq. 0) THEN
+          WRITE(*,*) 'NO UNST SCHEME SELECTED'
+          CALL EXTCDE ( 19 )
+        ELSE IF (SUM(UNSTSCHEMES) .gt. 1) THEN
+          WRITE(*,*) 'MORE THAN ONE UNST SCHEME SELECTED'
+          CALL EXTCDE ( 19 )
+        ENDIF
+ 
         UNSTSCHEME=-1
-        DO IX=1,4
+        DO IX=1,6
           IF (UNSTSCHEMES(IX).EQ.1) THEN 
             UNSTSCHEME=IX
             EXIT
@@ -3004,27 +3007,28 @@
         SELECT CASE (UNSTSCHEME)
         CASE (1) 
           FSN = EXPFSN
-          PNAME2 = 'N Explicit (Fluctuation Splitting) '
+          PNAME2 = 'N Explicit'
         CASE (2) 
           FSPSI = EXPFSPSI
-          PNAME2 = 'PSI Explicit (Fluctuation Splitting)  '
+          PNAME2 = 'PSI Explicit'
         CASE (3) 
           FSFCT = EXPFSFCT
-          PNAME2 = ' Flux Corrected Transport Explicit'
+          PNAME2 = 'Flux Corrected Transport Explicit'
         CASE (4) 
           FSNIMP = IMPFSN 
-          PNAME2 = 'N Implicit (Fluctuation Splitting) '
-          END SELECT
+          PNAME2 = 'N Implicit fractional step'
+        END SELECT
 !
         IF (SUM(UNSTSCHEMES).GT.1) WRITE(NDSO,1035)
-        WRITE (NDSO,2951) PNAME2
         IF (IMPTOTAL) THEN
           FSTOTALIMP = IMPTOTAL
-          PNAME2 = 'N Implicit (Fluctuation Splitting) for total implicit'
+          PNAME2 = 'N fully Implicit'
+          WRITE (NDSO,2951) PNAME2
         END IF
         IF (EXPTOTAL) THEN
           FSTOTALEXP = EXPTOTAL 
-          PNAME2 = 'N Explicit (Fluctuation Splitting) for one exchange explicit DC HPCF '
+          PNAME2 = 'N Block Explicit'
+          WRITE (NDSO,2951) PNAME2
         END IF
         IF (IMPREFRACTION .and. IMPTOTAL .AND. FLCTH) THEN
           FSREFRACTION = .TRUE.
@@ -3364,7 +3368,7 @@
 !
         CALL READMSH(NDSG,FNAME)
         ALLOCATE(ZBIN(NX, NY),OBSX(NX,NY),OBSY(NX,NY))
-        ZBIN(:,1) = VSC*XYB(:,3)
+        ZBIN(:,1) = VSC * ZB(:)
 !/DEBUGSTP        WRITE(740,*) 'VSC=', VSC
 !/DEBUGSTP        WRITE(740,*) 'Printing ZBIN 1'
 !/DEBUGSTP        DO IX=1,NX
@@ -3373,8 +3377,8 @@
 !
 ! subgrid obstructions are not yet handled in unstructured grids
 !
-        OBSX(:,:)=0.
-        OBSY(:,:)=0.
+        OBSX(:,:) = 0.
+        OBSY(:,:) = 0.
 
       END IF
 !
@@ -4067,6 +4071,7 @@
 ! ... Branch back input / excluded points ( ILOOP in 8.b )
 !
         END DO
+
 !/DEBUGGRID      WRITE(740+IAPROC,*) 'nbCase1=', nbCase1
 !/DEBUGGRID      WRITE(740+IAPROC,*) 'nbCase2=', nbCase2
 !/DEBUGGRID      WRITE(740+IAPROC,*) 'nbCase3=', nbCase3
@@ -4178,6 +4183,8 @@
       NLAND  = 0
       NBI    = 0
       NBT    = 0
+
+
 !
       DO IX=1, NX
         DO IY=1, NY
@@ -4187,6 +4194,9 @@
           IF ( TMPSTA(IY,IX) .EQ. 2 ) NBI    = NBI + 1
           END DO
         END DO
+
+
+        
 !
 !/SMC !Li   Moved before FLBPI is defined with NBI value.  JGLi05Jun2015
 !/SMC !Li   Overwrite NSEA with NCel for SMC grid. 
@@ -4215,11 +4225,13 @@
 !/O1                X = FACTOR * ( XGRDIN(IX,IY) )
 !/O1                Y = FACTOR * ( YGRDIN(IX,IY) )
 !/O1              ELSE
-!/O1                X = FACTOR * XYB(IX,1)
-!/O1                Y = FACTOR * XYB(IX,2)
+!/O1                X = FACTOR * XGRD(1,IX)
+!/O1                Y = FACTOR * YGRD(1,IX)
 !/O1                END IF
 !/O1            IF ( TMPSTA(IY,IX).EQ.2 ) THEN
 !/O1                  IF ( FLAGLL ) THEN
+!/O1                      WRITE (*, 988) IBI, IX, IY, X, Y
+!/O1                      WRITE (*, *) IBI, IX, IY, X, Y
 !/O1                      WRITE (NDSO, 988) IBI, IX, IY, X, Y
 !/O1                    ELSE
 !/O1                      WRITE (NDSO,1988) IBI, IX, IY, X, Y
@@ -4230,6 +4242,7 @@
 !/O1            END DO
         END IF
 !
+
       WRITE (NDSO,1980)
       IF ( NBT .EQ. 0 ) THEN
           WRITE (NDSO,1985)
@@ -4268,20 +4281,13 @@
           DO IX=1, NX
             XGRD(IY,IX) = XGRDIN(IX,IY)
             YGRD(IY,IX) = YGRDIN(IX,IY)
-            END DO
           END DO
-          DEALLOCATE ( XGRDIN, YGRDIN )   
-          CALL W3GNTX ( 1, 6, 6 )  
+        END DO
+        DEALLOCATE ( XGRDIN, YGRDIN )   
+        CALL W3GNTX ( 1, 6, 6 )  
       ELSE 
-!
-!FA:  This distinction  between structured and unstructured
-! should be removed when XYB is replaced by XGRD and YGRD
-!
-        DO IX=1, NX
-          XGRD(:,IX) = XYB(IX,1)
-          YGRD(:,IX) = XYB(IX,2)
-          END DO
-        END IF   ! GTYPE
+!AR: This is already done in readmsh 
+      END IF   ! GTYPE
 !      
 !
 !!Li  MAPSTA = TMPSTA
@@ -4305,7 +4311,6 @@
       TRNY   = 0.
 !
 !Li  Shelter MAPSTA etc LLG definitions for SMC by logical RGLGRD !
-!AR  This is only .FALSE. for SMC ..
       IF( RGLGRD ) THEN
       ISEA   = 0
       DO IY=1, NY
@@ -4597,6 +4602,7 @@
 !/T                   1, NX, IX3, 1, NY, IY3, 'Sea points', 'm')
 !/T      DEALLOCATE ( MAPOUT )
 !
+
       DO ISP=1, NSPEC+NTH
         MAPWN(ISP) = 1 + (ISP-1)/NTH
         MAPTH(ISP) = 1 + MOD(ISP-1,NTH)
@@ -4754,7 +4760,11 @@
 ! AR: this is not anymore needed and will be deleted ...
 !
       IF (GTYPE.EQ.UNGTYPE) THEN 
-        CALL SETUGIOBP 
+        !WRITE(*,*) MAPSTA
+        !WRITE(*,*) '-----------------------'
+        !WRITE(*,*) TMPSTA 
+        !STOP
+        CALL SET_UG_IOBP 
 !/REF1      ELSE
 !/REF1        CALL W3SETREF
         END IF
@@ -5779,7 +5789,7 @@
 !/PR3                      ', WDTHCG = ',F4.2,', WDTHTH = ',F4.2,' /')
 !
  2956 FORMAT ( '  &UNST UGBCCFL =',L3,', UGOBCAUTO =',L3,             &
-               ', UGOBCDEPTH =', F8.3,', UGOBCFILE=',A,','/           &
+               ', UGOBCDEPTH =', F8.3,', UGOBCFILE=',A256,','/           &
                ',  EXPFSN =',L3,',EXPFSPSI =',L3,                     &
                ',  EXPFSFCT =', L3,',IMPFSN =',L3,',EXPTOTAL=',L3,    &
                ',  IMPTOTAL=',L3,',IMPREFRACTION=', L3,               &
@@ -6060,8 +6070,8 @@
                '       -----|-------|-------|---------|---------')
  1987 FORMAT ( '         Nr.|   IX  |   IY  |     X     |     Y     '/    &
                '       -----|-------|-------|-----------|-----------')
-  988 FORMAT ( '       ',I4,2(' |',I6),2(' |',F8.2))
- 1988 FORMAT ( '       ',I4,2(' |',I6),2(' |',F8.1,'E3'))
+  988 FORMAT ( '       ',I8,2(' |',I10),2(' |',F8.2))
+ 1988 FORMAT ( '       ',I8,2(' |',I10),2(' |',F8.1,'E3'))
   989 FORMAT ( ' ')
 !
   990 FORMAT (/'  Output boundary points : '/                         &

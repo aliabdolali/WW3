@@ -184,7 +184,7 @@
 !/O4      USE W3ARRYMD, ONLY : PRT1DS
 !/O5      USE W3ARRYMD, ONLY : PRT2DS
 !/O6      USE W3ARRYMD, ONLY : PRTBLK
-      USE W3DISPMD, ONLY : WAVNU1
+      USE W3DISPMD, ONLY : WAVNU3
       USE W3IOGRMD, ONLY: W3IOGR
       USE W3IORSMD, ONLY: W3IORS
       USE W3GSRUMD, ONLY: W3DIST
@@ -461,8 +461,8 @@
 !/SHRD            ISEA   = JSEA
             IF (GTYPE .EQ. UNGTYPE) THEN 
                IX     = MAPSF(ISEA,1)
-               X      = XYB(IX,1)
-               Y      = XYB(IX,2)
+               X      = XGRD(1,IX)
+               Y      = YGRD(1,IX)
             ELSE
                IX     = MAPSF(ISEA,1)
                IY     = MAPSF(ISEA,2)
@@ -628,8 +628,8 @@
 !/SHRD            ISEA   = JSEA
             IF (GTYPE .EQ. UNGTYPE) THEN 
                IX     = MAPSF(ISEA,1)
-               X      = XYB(IX,1)
-               Y      = XYB(IX,2)
+               X      = XGRD(1,IX)
+               Y      = YGRD(1,IX)
             ELSE
                IX     = MAPSF(ISEA,1)
                IY     = MAPSF(ISEA,2)
@@ -723,7 +723,7 @@
             DEPTH  = MAX ( DMIN , -ZB(ISEA) )
 !/O6            ETOT   = 0.
             DO IK=1, NK
-              CALL WAVNU1 ( SIG(IK), DEPTH, WN, CG )
+              CALL WAVNU3 ( SIG(IK), DEPTH, WN, CG )
 !/O6              E1I    = 0.
               DO ITH=1, NTH
 !/O6                E1I    = E1I + VA(ITH+(IK-1)*NTH,JSEA)
